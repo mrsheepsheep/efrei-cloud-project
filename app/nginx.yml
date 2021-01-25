@@ -1,6 +1,18 @@
 - hosts: master
   become: no
   tasks:
+  
+  - name: Helm - install Ingress for webapp
+    community.kubernetes.helm:
+      wait: yes
+      name: ingress-public
+      namespace: ingress-public
+      create_namespace: true
+      chart_ref: ingress-nginx/ingress-nginx
+      values:
+        controller:
+          ingressClass: public
+  
   - name: Add Bitnami Helm repository
     community.kubernetes.helm_repository:
       name: bitnami
