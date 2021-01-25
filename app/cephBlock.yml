@@ -1,0 +1,14 @@
+#################################################################################################################
+# Create a storage class with a pool that sets replication for a production environment.
+# A minimum of 3 nodes with OSDs are required in this example since the default failureDomain is host.
+#  kubectl create -f storageclass.yaml
+#################################################################################################################
+
+apiVersion: ceph.rook.io/v1
+kind: CephBlockPool
+metadata:
+  name: wp-replicapool
+  namespace: rook-ceph
+spec:
+  replicated:
+    size: 3

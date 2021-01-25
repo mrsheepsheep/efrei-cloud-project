@@ -1,0 +1,39 @@
+- hosts: master
+  become: yes
+  tasks:
+    - name: reset cluster
+      command: kubeadm reset -f
+
+    - name: initialize cluster
+      command: kubeadm init --pod-network-cidr=10.244.0.0/16
+
+    - name: create .kube directory
+      become: yes
+      become_user: node
+      file:
+        path: $HOME/.kube
+        state: directory
+        mode: 0755
+
+    - name: copy admin.conf to node .kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/node/.kube/config
+        remote_src: yes
+        owner: node
+        mode: u=rw
+
+    - name: copy admin.conf to local .kube config
+      fetch:
+        src: /etc/kubernetes/admin.conf
+        dest: ~/.kube/config
+        flat: yes
+    
+    - name: install pip3 openshift
+      become: yes
+      shell: apt install python3-pip && pip3 install openshift
+
+    - name: install flannel node network plugin
+      become: yes
+      become_user: node
+      shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml

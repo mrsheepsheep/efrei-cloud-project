@@ -1,0 +1,33 @@
+- hosts: master
+  become: no
+  tasks:
+  - name: Add Falco helm repository
+    community.kubernetes.helm_repository:
+      name: falcosecurity
+      repo_url: https://falcosecurity.github.io/charts
+
+  - name: Install Falco via Helm
+    community.kubernetes.helm:
+      name: falco
+      chart_ref: falcosecurity/falco
+      namespace: falco-system
+      create_namespace: true  
+      values:
+        falco:
+          jsonOutput: true
+          jsonIncludeOutputProperty: true
+          httpOutput:
+            enabled: true
+            url: "http://falco-sidekick-falcosidekick:2801/"
+
+  - name: Install Falco sidekick via Helm
+    community.kubernetes.helm:
+      name: falco-sidekick
+      chart_ref: falcosecurity/falcosidekick
+      namespace: falco-system
+      values:
+        config:
+          debug: true
+          discord:
+            webhookurl: "https://discord.com/api/webhooks/..."
+            minimumPriority: error

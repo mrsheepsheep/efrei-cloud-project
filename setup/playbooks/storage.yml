@@ -1,0 +1,19 @@
+- hosts: master
+  become: no
+  tasks:
+
+    - name: Add Rook repository
+      community.kubernetes.helm_repository:
+        name: rook-release
+        repo_url: https://charts.rook.io/release
+
+    - name: Install Rook-Ceph storage platform via Helm
+      community.kubernetes.helm:
+        name: rook-ceph
+        namespace: rook-ceph
+        create_namespace: true
+        chart_ref: rook-release/rook-ceph
+
+    - name: Setup Rook-Ceph cluster
+      community.kubernetes.k8s:
+        definition: "{{ lookup('template', 'storage/cluster-definition.yml') | from_yaml }}"

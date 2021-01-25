@@ -1,0 +1,51 @@
+- hosts: master
+  become: no
+  tasks:
+
+  - name: Helm - install Ingress for webapp
+    community.kubernetes.helm:
+      wait: yes
+      name: ingress-public
+      namespace: ingress-public
+      create_namespace: true
+      chart_ref: ingress-nginx/ingress-nginx
+      values:
+        controller:
+          ingressClass: public
+
+  - name: Helm - add Bitnami repo
+    community.kubernetes.helm_repository:
+      name: bitnami
+      repo_url: https://charts.bitnami.com/bitnami
+
+  - name: Helm - install Wordpress
+    community.kubernetes.helm:
+      name: wordpress
+      namespace: wordpress-public
+      create_namespace: true
+      chart_ref: bitnami/wordpress
+      values:
+        ingress:
+          enabled: true
+          hostname: wordpress.projet.cloud
+          annotations:
+            kubernetes.io/ingress.class: "public"
+        global:
+          storageClass: wp-pv-claim
+        persistence:
+          storageClass: wp-pv-claim
+
+  - name: Create CephBlock for StorageClass
+    community.kubernetes.k8s:
+      namespace: wordpress-public
+      definition: "{{ lookup('template', 'cephBlock.yml') | from_yaml }}"
+
+  - name: Create PersistentVolumeClaim for Wordpress
+    community.kubernetes.k8s:
+      namespace: wordpress-public
+      definition: "{{ lookup('template', 'wp-pvc.yml') | from_yaml }}"
+
+
+#  - name: Create StorageClass for Wordpress
+#    community.kubernetes.k8s:
+#      definition: "{{ lookup('template', 'storageClass.yml') | from_yaml }}"

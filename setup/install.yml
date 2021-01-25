@@ -1,0 +1,8 @@
+---
+- import_playbook: playbooks/install-kube-dependencies.yml
+- import_playbook: playbooks/master-node.yml
+- import_playbook: playbooks/worker-nodes.yml
+- import_playbook: check-installation.yml
+- import_playbook: playbooks/install-helm.yml
+- import_playbook: playbooks/install-ingress.yml
+- import_playbook: playbooks/storage.yml

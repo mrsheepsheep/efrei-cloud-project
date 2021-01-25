@@ -1,0 +1,21 @@
+- hosts: master
+  become: no
+  tasks:
+  - name: Add Bitnami Helm repository
+    community.kubernetes.helm_repository:
+      name: bitnami
+      repo_url: https://charts.bitnami.com/bitnami
+  
+  - name: Install nginx via Helm
+    community.kubernetes.helm:
+      name: nginx
+      chart_ref: bitnami/nginx
+      namespace: nginx-test
+      create_namespace: true
+      values:
+        ingress:
+          enabled: true
+          hostname: www.projet.cloud
+          annotations:
+            kubernetes.io/ingress.class: public
+

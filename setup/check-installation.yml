@@ -1,0 +1,10 @@
+- hosts: localhost
+  become: no
+  tasks:
+    - name: kubectl cluster-info
+      community.kubernetes.k8s_cluster_info:
+      register: api_status
+    
+    - name: print api status
+      debug:
+        var: api_status.connection.host

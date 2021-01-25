@@ -1,0 +1,40 @@
+- hosts: master
+  become: no
+  tasks:
+  - name: Helm - add Ingress repository
+    community.kubernetes.helm_repository:
+      name: ingress-nginx
+      repo_url: https://kubernetes.github.io/ingress-nginx
+
+  - name: Helm - install Ingress for backend
+    community.kubernetes.helm:
+      name: ingress
+      namespace: ingress-system
+      create_namespace: true
+      chart_ref: ingress-nginx/ingress-nginx
+
+  - name: Install MetalLB namespace
+    shell: kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/namespace.yaml
+
+  - name: Install MetalLB
+    shell: kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/metallb.yaml
+
+  - name: Generate MetalLB secrets
+    shell: kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
+    ignore_errors: yes
+
+  - name: Apply ingress-nginx ConfigMap to MetalLB
+    community.kubernetes.k8s:
+      state: present
+      definition:
+        kind: ConfigMap
+        metadata:
+          namespace: metallb-system
+          name: config
+        data:
+          config: |
+            address-pools:
+            - name: default
+              protocol: layer2
+              addresses:
+              - 10.0.0.10-10.0.0.15
